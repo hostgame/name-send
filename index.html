@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+    <title>Send Nebulas by name</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="contenner">
+        <div class="logo">
+            <div class="img">
+                <img src="img/logo.png" alt="">
+            </div>
+            <div class="name">Send Nebulas by name</div>
+        </div>
+        <div class="noExtension hide" id="noExtension">
+            NOTE: Please install <a target="_blank" href="https://github.com/ChengOrangeJu/WebExtensionWallet">WebExtensionWallet</a>  to use NameSend
+        </div>
+        <div class="menu">
+            <button class="active" id="send_menu">Send</button>
+            <button id="add_menu">Add name</button>
+        </div>
+
+        <div class="app_form send">
+            <input id="recipient" type="text" placeholder="name" disabled>
+            <button id="send" disabled>send</button>
+        </div>
+
+        <div class="app_form add hide">
+            <input id="name" type="text" placeholder="name" disabled>
+            <input id="address" type="text" placeholder="address" disabled>
+            <button id="add" disabled>add</button>
+        </div>
+    </div>
+    <script src=lib/jquery-3.3.1.min.js></script>
+    <script src=lib/nebPay.js></script>
+    <script>
+    var NebPay = require("nebpay");
+    var nebPay = new NebPay();
+
+    if(typeof(webExtensionWallet) === "undefined"){
+        //alert ("Extension wallet is not installed, please install it first.")
+        $("#noExtension").removeClass("hide")
+    }else{
+        $("#recipient").attr("disabled",false);
+        $("#send").attr("disabled",false);
+        $("#name").attr("disabled",false);
+        $("#address").attr("disabled",false);
+        $("#add").attr("disabled",false);
+    }
+
+    var dappAddress = "n1orwfYyMUHxe6cxSySuJBPmXdibqbcKwQb";
+
+    $(".menu button").click(function(e){
+        $(".menu button.active").removeClass("active");
+        $(e.target).addClass("active");
+        $(".app_form").addClass("hide");
+    });
+
+    $("#add_menu").click(function(){
+        $(".app_form.add").removeClass("hide");
+    });
+
+    $("#send_menu").click(function(){
+        $(".app_form.send").removeClass("hide");
+    });
+
+
+    $("#send").click(function(){
+        var to = dappAddress;
+        var value = "0.05";
+        var callFunction = "send";
+        var callArgs = "[\"" + $("#recipient").val() + "\"]";
+
+        nebPay.simulateCall(to, value, callFunction, callArgs, {
+            listener: function(resp) {
+                var result = resp.result
+                console.log("SENDING: return of rpc call: " + JSON.stringify(result))
+                if (result === "Error: No such name in storage."){
+                    alert("No such name. You can add it");
+                    return;
+                }else if(result === "\"Money sent\""){
+                    nebPay.call(to, value, callFunction, callArgs, {
+                        listener: sendListener
+                    });
+                    
+                }
+            }
+        });
+
+    });
+
+    function sendListener(resp) {
+        var result = resp.result
+        console.log("SENDING: return of rpc call: " + JSON.stringify(result))
+
+        if (result === "Error: No such name in storage."){
+            alert("No such name. You can add it");
+        }else{
+            console.log(result);
+        }
+    }
+
+    $("#add").click(function(){
+        var to = dappAddress;
+        var value = "0";
+        var callFunction = "save";
+        var callArgs = "[\"" + $("#name").val() + "\",\"" + $("#address").val() + "\"]";
+        nebPay.simulateCall(to, value, callFunction, callArgs, {
+            listener: function(resp) {
+                var result = resp.result
+                console.log("ADDING: return of rpc call: " + JSON.stringify(result))
+
+                if (result === "Error: Invalid address."){
+                    alert("Invalid address");
+                } else if(result === "\"Saved\""){
+                    nebPay.call(to, value, callFunction, callArgs, {
+                        listener: addListener
+                    });
+                }
+            }
+        });
+    })
+
+    function addListener(resp) {
+        var result = resp.result
+        console.log("ADDING: return of rpc call: " + JSON.stringify(result))
+
+        if (result === "Error: Invalid address."){
+            alert("Invalid address");
+        } else if(result === "\"Saved\""){
+            alert("Address saved");
+        }
+
+    }
+
+</script>
+</body>
+
+</html>
