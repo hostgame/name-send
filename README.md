@@ -1,0 +1,1 @@
+Anybody can reserve the nickname for his nebulas address. After that anybody can send NAS by nickname to this person.
